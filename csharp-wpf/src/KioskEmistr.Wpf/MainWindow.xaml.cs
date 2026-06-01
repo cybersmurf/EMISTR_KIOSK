@@ -39,7 +39,17 @@ public partial class MainWindow : Window
         {
             var tab = _tabHost.OpenInitialTab();
             Tabs.SelectedItem = tab;
-            await tab.WebView.EnsureCoreWebView2Async();
+            var env = await BrowserTabHost.EnvironmentTask;
+            await tab.WebView.EnsureCoreWebView2Async(env);
+
+            if (!_config.AllowNewTabs)
+            {
+                Tabs.ApplyTemplate();
+                if (Tabs.Template?.FindName("HeaderPanel", Tabs) is UIElement panel)
+                {
+                    panel.Visibility = Visibility.Collapsed;
+                }
+            }
         }
         catch (Exception ex)
         {

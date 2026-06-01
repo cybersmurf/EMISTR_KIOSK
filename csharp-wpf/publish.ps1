@@ -85,6 +85,12 @@ if (Test-Path $OutputDir) {
 
 Invoke-Publish $WpfProject   $RuntimeOut   "KioskEmistr.Wpf (runtime browser)"
 Invoke-Publish $GenProject   $GeneratorOut "KioskEmistr.Generator.Wpf (GUI generator)"
+
+# Generator ocekava runtime v podslozce 'runtime/' vedle sebe (AppContext.BaseDirectory + "runtime")
+Write-Step "Kopirovani runtime pro generator"
+Copy-Item -Path $RuntimeOut -Destination "$GeneratorOut\runtime" -Recurse -Force
+Write-Host "  OK -> $GeneratorOut\runtime" -ForegroundColor Green
+
 Invoke-Publish $CliProject   $CliOut       "KioskEmistr.Generator CLI"
 
 # --- Zkopírovat assets ---

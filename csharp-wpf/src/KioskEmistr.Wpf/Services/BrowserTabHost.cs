@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Windows;
 using KioskEmistr.Wpf.Models;
 using Microsoft.Web.WebView2.Core;
@@ -15,6 +16,12 @@ public sealed class BrowserTabHost
     private readonly DiagnosticsService _diagnostics;
     private readonly ObservableCollection<BrowserTab> _tabs = new();
 
+    // Sdílené prostředí WebView2 se stálou cache v AppData
+    private static readonly Lazy<Task<CoreWebView2Environment>> _envLazy = new(() =>
+        CoreWebView2Environment.CreateAsync(userDataFolder: Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "KIOSK_EMISTR", "WebView2")));
+
     public BrowserTabHost(BrowserConfig config, KioskPolicy policy, BrowserService browserService, DiagnosticsService diagnostics)
     {
         _config = config;
@@ -24,6 +31,8 @@ public sealed class BrowserTabHost
     }
 
     public ObservableCollection<BrowserTab> Tabs => _tabs;
+
+    internal static Task<CoreWebView2Environment> EnvironmentTask => _envLazy.Value;
 
     public BrowserTab OpenInitialTab()
     {
@@ -87,7 +96,8 @@ public sealed class BrowserTabHost
 
         webView.Loaded += async (_, __) =>
         {
-            await webView.EnsureCoreWebView2Async();
+            var env = await _envLazy.Value;
+            await webView.EnsureCoreWebView2Async(env);
             if (webView.CoreWebView2 is not null)
             {
                 webView.Source = new Uri(normalizedUrl);
