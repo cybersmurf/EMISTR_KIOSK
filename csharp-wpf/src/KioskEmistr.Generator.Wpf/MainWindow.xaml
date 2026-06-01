@@ -1,0 +1,52 @@
+<Window x:Class="KioskEmistr.Generator.Wpf.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="EMISTR | Kiosk Generator"
+        Width="550" Height="400"
+        ResizeMode="CanMinimize"
+        WindowStartupLocation="CenterScreen"
+        Background="#F5F7FA">
+
+  <DockPanel>
+
+    <!-- Header -->
+    <Border DockPanel.Dock="Top" Background="White" Height="100"
+            BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
+      <TextBlock Text="EMISTR  Kiosk Generator"
+                 FontSize="22" FontWeight="Bold" Foreground="#2D3748"
+                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    </Border>
+
+    <!-- Tlacitko dole -->
+    <Button DockPanel.Dock="Bottom"
+            x:Name="BtnGenerate" Content="VYGENEROVAT EXE"
+            Click="Generate_Click"
+            Height="55" Margin="40,0,40,30"
+            Background="#2D3748" Foreground="White"
+            FontSize="16" FontWeight="Bold"
+            BorderThickness="0" Cursor="Hand"/>
+
+    <!-- Status -->
+    <TextBlock DockPanel.Dock="Bottom"
+               x:Name="TxtStatus" Text=""
+               Foreground="#718096" FontSize="12"
+               HorizontalAlignment="Center"
+               Margin="0,0,0,8"/>
+
+    <!-- Formular -->
+    <StackPanel Margin="40,24,40,0">
+
+      <TextBlock Text="Nazev Aplikace" Foreground="#4A5568" FontSize="13" Margin="0,0,0,4"/>
+      <TextBox x:Name="TxtAppName"
+               Height="38" Padding="10,8" FontSize="14"
+               BorderBrush="#CBD5E0" BorderThickness="1" Background="White"/>
+
+      <TextBlock Text="Cilova URL adresa" Foreground="#4A5568" FontSize="13" Margin="0,16,0,4"/>
+      <TextBox x:Name="TxtUrl"
+               Height="38" Padding="10,8" FontSize="14"
+               BorderBrush="#CBD5E0" BorderThickness="1" Background="White"/>
+
+    </StackPanel>
+
+  </DockPanel>
+</Window>

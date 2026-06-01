@@ -1,0 +1,16 @@
+# Python build outputs
+dist/
+build/
+__pycache__/
+*.pyc
+*.pyo
+*.spec.bak
+
+# Compiled exe (PyInstaller output)
+KioskGenerator.exe
+
+# macOS
+.DS_Store
+
+# VS Code
+.vscode/

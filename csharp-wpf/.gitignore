@@ -1,0 +1,15 @@
+# Build outputs
+bin/
+obj/
+release/
+
+# User-specific VS files
+*.user
+*.suo
+.vs/
+
+# Rider
+.idea/
+
+# Publish output
+publish/
