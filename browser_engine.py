@@ -28,18 +28,21 @@ def load_config():
     try:
         exe_path = sys.executable
         with open(exe_path, "rb") as f:
-            content = f.read()
-        if SEPARATOR in content:
-            parts = content.split(SEPARATOR)
-            json_bytes = parts[-1]
+            # Načteme jen posledních 4 KB — JSON config je vždy připojen na úplný konec.
+            # Vyhneme se načítání celého PyInstaller bundle (50–150 MB) do paměti.
+            f.seek(0, 2)
+            file_size = f.tell()
+            tail_size = min(4096, file_size)
+            f.seek(-tail_size, 2)
+            tail = f.read()
+        if SEPARATOR in tail:
+            json_bytes = tail.split(SEPARATOR, 1)[-1]
             try:
-                config = json.loads(json_bytes.decode("utf-8"))
-                return config
+                return json.loads(json_bytes.decode("utf-8"))
             except Exception as e:
                 print(f"Failed to parse config: {e}")
                 return default_config
-        else:
-            return default_config
+        return default_config
     except Exception as e:
         print(f"Error reading config: {e}")
         return default_config
