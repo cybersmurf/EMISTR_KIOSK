@@ -19,4 +19,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="..\..\..\agerit_logo.png" Link="agerit_logo.png"/>
+    <Resource Include="..\..\..\emistr_logo.png" Link="emistr_logo.png"/>
+  </ItemGroup>
 </Project>
