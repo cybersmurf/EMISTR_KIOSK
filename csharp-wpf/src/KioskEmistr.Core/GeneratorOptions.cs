@@ -10,4 +10,6 @@ public sealed class GeneratorOptions
     public bool KioskMode { get; init; } = true;
     public bool AllowNewTabs { get; init; }
     public bool EnableDevTools { get; init; }
+    public Rs232DeviceConfig? BarcodeScanner { get; init; }
+    public Rs232DeviceConfig? RfidReader { get; init; }
 }

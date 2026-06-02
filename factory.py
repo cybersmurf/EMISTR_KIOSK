@@ -46,7 +46,7 @@ class KioskGeneratorApp(ctk.CTk):
         super().__init__(fg_color="#F5F7FA") # Modern off-white background
         
         self.title("EMISTR | Kiosk Generator")
-        self.geometry("550x650")
+        self.geometry("550x850")
         self.resizable(False, False)
         
         # Set Window Icon
@@ -99,6 +99,16 @@ class KioskGeneratorApp(ctk.CTk):
         # Inputs
         self.create_input_field("Název Aplikace", "např. Sklad_Kiosk", "entry_name")
         self.create_input_field("Cílová URL adresa", "https://emistr.cloud/...", "entry_url")
+
+        # RS232 sekce
+        ctk.CTkLabel(
+            self.container, text="RS232 čtečky (volitelné)",
+            text_color="#718096", font=ctk.CTkFont(family="Inter", size=12, weight="bold")
+        ).pack(anchor="w", pady=(25, 5))
+        self.create_input_field("Čtečka čárových kódů — COM port", "COM3 (prázdné = zakázáno)", "entry_barcode_port")
+        self.create_input_field("Čtečka čárových kódů — Baud rate", "9600", "entry_barcode_baud")
+        self.create_input_field("RFID čtečka čipů — COM port", "COM4 (prázdné = zakázáno)", "entry_rfid_port")
+        self.create_input_field("RFID čtečka čipů — Baud rate", "9600", "entry_rfid_baud")
 
         # Status Message
         self.status_label = ctk.CTkLabel(self.container, text="", text_color="#718096", font=("Inter", 12))
@@ -160,6 +170,23 @@ class KioskGeneratorApp(ctk.CTk):
             "url": url,
             "zoom": 1.0
         }
+
+        barcode_port = self.entry_barcode_port.get().strip()
+        if barcode_port:
+            baud_str = self.entry_barcode_baud.get().strip()
+            config_data["barcode_scanner"] = {
+                "port": barcode_port,
+                "baud_rate": int(baud_str) if baud_str.isdigit() else 9600
+            }
+
+        rfid_port = self.entry_rfid_port.get().strip()
+        if rfid_port:
+            baud_str = self.entry_rfid_baud.get().strip()
+            config_data["rfid_reader"] = {
+                "port": rfid_port,
+                "baud_rate": int(baud_str) if baud_str.isdigit() else 9600
+            }
+
         json_bytes = json.dumps(config_data).encode("utf-8")
 
         try:

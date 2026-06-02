@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows;
@@ -17,6 +18,7 @@ public partial class MainWindow : Window
     private readonly BrowserTabHost _tabHost;
     private readonly KioskWindowService _windowService;
     private readonly KioskShutdownService _shutdownService = new();
+    private Rs232Service? _rs232Service;
     private bool _allowShutdown;
 
     public MainWindow()
@@ -29,8 +31,13 @@ public partial class MainWindow : Window
         Title = _config.Title;
         Tabs.ItemsSource = _tabHost.Tabs;
         Loaded += (_, __) => _windowService.Apply(this);
-        Closing += (_, e) => e.Cancel = _config.KioskMode && !_allowShutdown;
+        Closing += (_, e) =>
+        {
+            e.Cancel = _config.KioskMode && !_allowShutdown;
+            if (!e.Cancel) _rs232Service?.Dispose();
+        };
         Loaded += OnLoaded;
+        _rs232Service = new Rs232Service(_config, _diagnostics, OnScanData);
     }
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
@@ -82,5 +89,18 @@ public partial class MainWindow : Window
             CloseCurrentTab();
             e.Handled = true;
         }
+    }
+
+    private void OnScanData(string data, string source)
+    {
+        Dispatcher.InvokeAsync(async () =>
+        {
+            if (Tabs.SelectedItem is not BrowserTab tab) return;
+            if (tab.WebView.CoreWebView2 is null) return;
+            var escaped = JsonSerializer.Serialize(data);
+            await tab.WebView.CoreWebView2.ExecuteScriptAsync(
+                $"window.dispatchEvent(new CustomEvent('kioskInput',{{detail:{{value:{escaped},source:'{source}'}}}}))"
+            );
+        });
     }
 }

@@ -32,7 +32,9 @@ public sealed class GeneratorService
             KioskMode = options.KioskMode,
             AllowedOrigins = new[] { GetOrigin(normalizedUrl) },
             AllowNewTabs = options.AllowNewTabs,
-            EnableDevTools = options.EnableDevTools
+            EnableDevTools = options.EnableDevTools,
+            BarcodeScanner = options.BarcodeScanner,
+            RfidReader = options.RfidReader
         };
 
         var configPath = Path.Combine(appFolder, "appsettings.json");

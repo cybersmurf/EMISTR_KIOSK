@@ -1,13 +1,20 @@
 import sys
 import os
 import json
-from PyQt6.QtCore import QUrl, Qt
+import queue
+import threading
+from PyQt6.QtCore import QUrl, Qt, QTimer
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QTabWidget, QWidget, QVBoxLayout, QMenu
 )
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtWebEngineCore import QWebEnginePage, QWebEngineSettings
+
+try:
+    import serial
+except ImportError:
+    serial = None
 
 
 SEPARATOR = b"<<<KIOSK_CONFIG>>>"
@@ -76,6 +83,43 @@ class WebEngineView(QWebEngineView):
         if action == reload_action:
             self.reload()
 
+
+class Rs232Reader:
+    """Čte RS232 port v background threadu a vkládá záznamy do fronty."""
+
+    def __init__(self, port, baud_rate, data_queue, source):
+        self.port = port
+        self.baud_rate = baud_rate
+        self.data_queue = data_queue
+        self.source = source
+        self._thread = threading.Thread(target=self._run, daemon=True)
+        self._running = False
+        self._buffer = ""
+
+    def start(self):
+        self._running = True
+        self._thread.start()
+
+    def stop(self):
+        self._running = False
+
+    def _run(self):
+        try:
+            with serial.Serial(self.port, self.baud_rate, timeout=0.1) as ser:
+                while self._running:
+                    if ser.in_waiting > 0:
+                        chunk = ser.read(ser.in_waiting).decode("utf-8", errors="ignore")
+                        for ch in chunk:
+                            if ch in ('\r', '\n'):
+                                data = self._buffer.strip()
+                                if data:
+                                    self.data_queue.put((data, self.source))
+                                self._buffer = ""
+                            else:
+                                self._buffer += ch
+        except Exception as e:
+            print(f"RS232 chyba na {self.port}: {e}", flush=True)
+
 class CustomBrowser(QMainWindow):
     def __init__(self, config):
         super().__init__()
@@ -112,6 +156,54 @@ class CustomBrowser(QMainWindow):
         # Create initial tab
         initial_url = self.config.get("url", "https://example.com")
         self.add_new_tab(QUrl(initial_url), "Hlavní stránka")
+
+        # RS232 čtečky — inicializace
+        self._scan_queue: queue.Queue = queue.Queue()
+        self._readers: list = []
+        self._setup_rs232(config)
+        self._scan_timer = QTimer()
+        self._scan_timer.setInterval(50)
+        self._scan_timer.timeout.connect(self._process_scan_queue)
+        self._scan_timer.start()
+
+    def _setup_rs232(self, config):
+        """Inicializuje RS232 čtečky podle konfigurace."""
+        if serial is None:
+            return
+        for key, source in [("barcode_scanner", "barcode"), ("rfid_reader", "rfid")]:
+            cfg = config.get(key, {})
+            if not cfg:
+                continue
+            port = cfg.get("port", "").strip()
+            baud = cfg.get("baud_rate", 9600)
+            if port:
+                reader = Rs232Reader(port, baud, self._scan_queue, source)
+                reader.start()
+                self._readers.append(reader)
+
+    def _process_scan_queue(self):
+        """Zavolá se každých 50 ms z hlavního vlákna — zpracuje frontu dat."""
+        while not self._scan_queue.empty():
+            data, source = self._scan_queue.get_nowait()
+            self.inject_scan_data(data, source)
+
+    def inject_scan_data(self, data, source):
+        """Odešle přečtenou hodnotu do aktuálního WebView přes CustomEvent."""
+        current_index = self.tabs.currentIndex()
+        view = self.tabs.widget(current_index)
+        if view and isinstance(view, WebEngineView):
+            escaped = json.dumps(data)
+            js = (
+                f"window.dispatchEvent(new CustomEvent('kioskInput',"
+                f"{{detail:{{value:{escaped},source:'{source}'}}}}))"
+            )
+            view.page().runJavaScript(js)
+
+    def closeEvent(self, event):
+        for reader in self._readers:
+            reader.stop()
+        self._scan_timer.stop()
+        super().closeEvent(event)
 
     def create_new_tab(self):
         # Called by WebEnginePage when a new window is requested

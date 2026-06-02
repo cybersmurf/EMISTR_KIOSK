@@ -55,7 +55,9 @@ public partial class MainWindow : Window
             TargetUrl        = url,
             RuntimeSourceDir = runtimeDir,
             OutputDir        = outputDir,
-            KioskMode        = true
+            KioskMode        = true,
+            BarcodeScanner   = ParseRs232(TxtBarcodePort.Text, TxtBarcodeBaud.Text),
+            RfidReader       = ParseRs232(TxtRfidPort.Text, TxtRfidBaud.Text)
         };
 
         try
@@ -79,5 +81,13 @@ public partial class MainWindow : Window
         TxtStatus.Foreground = error   ? Brushes.Crimson
                              : success ? Brushes.Green
                                        : Brushes.Gray;
+    }
+
+    private static Rs232DeviceConfig? ParseRs232(string port, string baud)
+    {
+        var p = port.Trim();
+        if (string.IsNullOrEmpty(p)) return null;
+        _ = int.TryParse(baud.Trim(), out var b);
+        return new Rs232DeviceConfig { Port = p, BaudRate = b > 0 ? b : 9600 };
     }
 }

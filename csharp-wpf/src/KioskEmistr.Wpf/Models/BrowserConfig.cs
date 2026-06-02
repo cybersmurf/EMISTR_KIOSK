@@ -9,4 +9,6 @@ public sealed class BrowserConfig
     public string[] AllowedOrigins { get; set; } = ["https://example.com"];
     public bool AllowNewTabs { get; set; } = false;
     public bool EnableDevTools { get; set; } = false;
+    public Rs232DeviceConfig? BarcodeScanner { get; set; }
+    public Rs232DeviceConfig? RfidReader { get; set; }
 }
