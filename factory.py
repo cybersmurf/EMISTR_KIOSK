@@ -46,8 +46,9 @@ class KioskGeneratorApp(ctk.CTk):
         super().__init__(fg_color="#F5F7FA") # Modern off-white background
         
         self.title("EMISTR | Kiosk Generator")
-        self.geometry("550x850")
-        self.resizable(False, False)
+        self.geometry("550x750")
+        self.minsize(550, 600)
+        self.resizable(True, True)
         
         # Set Window Icon
         try:
@@ -87,14 +88,14 @@ class KioskGeneratorApp(ctk.CTk):
             ctk.CTkLabel(self.header_frame, text="EMISTR KIOSK GENERATOR", 
                          font=ctk.CTkFont(family="Inter", size=24, weight="bold")).pack(pady=40)
 
-        # Main Content Container
-        self.container = ctk.CTkFrame(self, fg_color="transparent")
-        self.container.pack(fill="both", expand=True, padx=40, pady=30)
+        # Scrollable content area
+        self.container = ctk.CTkScrollableFrame(self, fg_color="transparent")
+        self.container.pack(fill="both", expand=True, padx=40, pady=(20, 0))
 
         # Title
-        ctk.CTkLabel(self.container, text="Konfigurace Kiosku", 
+        ctk.CTkLabel(self.container, text="Konfigurace Kiosku",
                      text_color="#1A202C",
-                     font=ctk.CTkFont(family="Inter", size=20, weight="bold")).pack(pady=(0, 30))
+                     font=ctk.CTkFont(family="Inter", size=20, weight="bold")).pack(pady=(0, 20))
 
         # Inputs
         self.create_input_field("Název Aplikace", "např. Sklad_Kiosk", "entry_name")
@@ -112,12 +113,16 @@ class KioskGeneratorApp(ctk.CTk):
 
         # Status Message
         self.status_label = ctk.CTkLabel(self.container, text="", text_color="#718096", font=("Inter", 12))
-        self.status_label.pack(pady=(20, 0))
+        self.status_label.pack(pady=(15, 5))
+
+        # Bottom bar — pevně dole, mimo scroll
+        bottom_bar = ctk.CTkFrame(self, fg_color="transparent")
+        bottom_bar.pack(fill="x", padx=40, pady=(8, 20))
 
         # Generate Button
         self.btn_generate = ctk.CTkButton(
-            self.container, 
-            text="VYGENEROVAT EXE", 
+            bottom_bar,
+            text="VYGENEROVAT EXE",
             command=self.generate_exe,
             height=55,
             corner_radius=8,
@@ -125,7 +130,7 @@ class KioskGeneratorApp(ctk.CTk):
             hover_color="#1A202C",
             font=ctk.CTkFont(family="Inter", size=16, weight="bold")
         )
-        self.btn_generate.pack(fill="x", side="bottom", pady=20)
+        self.btn_generate.pack(fill="x")
 
     def create_input_field(self, label_text, placeholder, attr_name):
         label = ctk.CTkLabel(self.container, text=label_text, text_color="#4A5568", font=("Inter", 13, "bold"))
